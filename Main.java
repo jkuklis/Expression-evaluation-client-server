@@ -5,7 +5,13 @@ public class Main {
 
         for (int i = 0; i < args.length; i += 2) {
             String par = args[i];
-            String arg = args[i+1];
+            String arg = "";
+            if (i+1 < args.length) {
+                arg = args[i+1];
+            } else {
+                System.err.println("No argument to parameter: " + par);
+                System.exit(1);
+            }
 
             switch(par) {
                 case "-p":

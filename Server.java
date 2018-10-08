@@ -101,7 +101,6 @@ public class Server {
                     System.err.println("Accept a connection failure.");
                     System.exit(1);
                 }
-                sleep(1000);
             }
         }
 
@@ -199,7 +198,6 @@ public class Server {
                     System.out.println("IOException in worker.");
                     System.exit(1);
                 }
-                sleep(1000);
             }
         }
     }
