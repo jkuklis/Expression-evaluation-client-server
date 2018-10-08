@@ -67,13 +67,20 @@ public class Server {
         }
     }
 
+    private enum State {
+        START, NUMBER, BEFORE_OPERATOR, AFTER_OPERATOR, ERROR
+    }
+
     private class Monitor {
+
         private int free_threads;
         private Boolean to_take;
+        private State state;
 
         public Monitor(int threads_count) {
             this.free_threads = threads_count;
             this.to_take = false;
+            this.state = State.START;
         }
 
         public void listen() throws InterruptedException {
@@ -117,66 +124,76 @@ public class Server {
                 try {
                     BufferedReader inFromClient = new BufferedReader(new InputStreamReader(priv_socket.getInputStream()));
                     DataOutputStream outToClient = new DataOutputStream(priv_socket.getOutputStream());
-                    String clientSentence = inFromClient.readLine();
-                    System.out.println("Received: " + clientSentence);
                     BigInteger val = new BigInteger("0");
                     BigInteger expr = new BigInteger("0");
-                    Boolean already = false;
-                    Boolean started = false;
-                    Boolean operator = false;
-                    Boolean plus = false;
-                    Boolean error = false;
-                    Boolean space = false;
-                    for (int i = 0; i < clientSentence.length(); i++) {
-                        char c = clientSentence.charAt(i);
-                        switch (c) {
+
+                    Boolean plus = true;
+                    int read_char = inFromClient.read();
+                    while (read_char != -1) {
+                        char c = (char)read_char;
+//                        System.out.println(c);
+                        if (c == '\n') {
+                            break;
+                        }
+
+                        switch(c) {
                             case '+':
                             case '-':
-                                if (operator || !already) {
-                                    error = true;
-                                    break;
+                                if (state == State.NUMBER || state == State.BEFORE_OPERATOR) {
+                                    state = State.AFTER_OPERATOR;
+                                    if (plus) {
+                                        val = val.add(expr);
+                                    } else {
+                                        val = val.subtract(expr);
+                                    }
+                                    expr = new BigInteger("0");
+                                    plus = (c == '+');
+                                } else {
+                                    state = State.ERROR;
                                 }
-
-                                plus = (c == '+');
                                 break;
                             case ' ':
                             case '\t':
-                                space = true;
-                                if (operator) {
-                                    if (plus) {
-                                        val.add(expr);
-                                    } else {
-                                        val.subtract(expr);
-                                    }
-                                } else {
-                                    val.add(expr);
+                                if (state == State.NUMBER) {
+                                    state = State.BEFORE_OPERATOR;
                                 }
                                 break;
                             default:
-                                if (Character.isDigit(c)) {
-                                    if (space && !operator) {
-                                        error = true;
-                                    }
-                                    already = true;
-
+                                if (Character.isDigit(c) && state != State.BEFORE_OPERATOR) {
+                                    expr = expr.multiply(new BigInteger("10"));
+                                    expr = expr.add(new BigInteger(Character.toString(c)));
+                                    state = State.NUMBER;
                                 } else {
-                                    error = true;
+                                    state = State.ERROR;
                                 }
 
                         }
-                    }
-                    if (operator) {
-                        error = true;
+
+                        if (state == State.ERROR) {
+                            break;
+                        }
+
+                        read_char = inFromClient.read();
                     }
 
+                    if (plus) {
+                        val = val.add(expr);
+                    } else {
+                        val = val.subtract(expr);
+                    }
+
+//                    System.out.println(expr.toString());
+//                    System.out.println(val.toString());
+//                    System.out.println(state.toString());
+
                     String message;
-                    if (error) {
+                    if (state == State.ERROR || state == state.AFTER_OPERATOR) {
                         message = "ERROR";
                     } else {
                         message = val.toString();
                     }
-                    System.out.println("Sending: " + message);
 
+                    outToClient.writeBytes(message);
 
                 } catch (IOException e) {
                     System.out.println("IOException in worker.");
