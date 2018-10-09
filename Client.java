@@ -1,10 +1,12 @@
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 
 public class Client {
     public static void main(String args[]) {
         int port = 12345;
-        String ip = "127.0.0.1";
+        String ip = "localhost";
 
         int TIMEOUT = 2;
         int MAX_LENGTH = 100;
@@ -44,24 +46,39 @@ public class Client {
         try {
             BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
             Socket clientSocket = new Socket(ip, port);
+            clientSocket.setSoTimeout(TIMEOUT * 1000);
             DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
             BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             StringBuilder message = new StringBuilder(MAX_LENGTH);
 
-            int read_char = inFromUser.read();
-            while (read_char != -1) {
-                message.append((char) read_char);
-                if (message.length() == MAX_LENGTH) {
-                    outToServer.writeBytes(message.toString());
-                    message = new StringBuilder(MAX_LENGTH);
+            try {
+                int read_char = inFromUser.read();
+                while (read_char != -1) {
+                    char c = (char) read_char;
+                    if (c == '\n') {
+                        break;
+                    }
+                    message.append(c);
+                    if (message.length() == MAX_LENGTH) {
+                        System.out.println(message);
+                        outToServer.writeBytes(message.toString());
+                        message = new StringBuilder(MAX_LENGTH);
+                    }
+
+                    read_char = inFromUser.read();
                 }
+
+
+                System.out.println(message);
+                message.append('\n');
+                outToServer.writeBytes(message.toString());
+
+                String response = inFromServer.readLine();
+                System.out.println(response);
+            } catch (SocketTimeoutException e) {
+                System.out.println("TIMEOUT");
+                System.exit(1);
             }
-
-            message.append('\n');
-            outToServer.writeBytes(message.toString());
-
-            String response = inFromServer.readLine();
-            System.out.println(response);
 
         } catch (IOException e) {
             System.out.println("IOException.");

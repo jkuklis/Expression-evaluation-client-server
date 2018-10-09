@@ -6,8 +6,6 @@ import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import static java.lang.Thread.sleep;
-
 public class Server {
     private int port;
     private int threads_count;
@@ -181,9 +179,9 @@ public class Server {
                         val = val.subtract(expr);
                     }
 
-//                    System.out.println(expr.toString());
-//                    System.out.println(val.toString());
-//                    System.out.println(state.toString());
+                    System.out.println(expr.toString());
+                    System.out.println(val.toString());
+                    System.out.println(state.toString());
 
                     String message;
                     if (state == State.ERROR || state == state.AFTER_OPERATOR) {
@@ -192,7 +190,7 @@ public class Server {
                         message = val.toString();
                     }
 
-                    outToClient.writeBytes(message);
+//                    outToClient.writeBytes(message + "\n");
 
                 } catch (IOException e) {
                     System.out.println("IOException in worker.");
