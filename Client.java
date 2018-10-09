@@ -5,7 +5,7 @@ import java.net.SocketTimeoutException;
 
 public class Client {
     private final int TIMEOUT = 2;
-    private final int MAX_LENGTH = 100;
+    private final int MAX_LENGTH = 1000;
 
     private int port;
     private String ip;
@@ -36,7 +36,6 @@ public class Client {
                     }
                     message.append(c);
                     if (message.length() == MAX_LENGTH) {
-                        System.out.println(message);
                         outToServer.writeBytes(message.toString());
                         message = new StringBuilder(MAX_LENGTH);
                     }
@@ -44,7 +43,6 @@ public class Client {
                     read_char = inFromUser.read();
                 }
 
-                System.out.println(message);
                 message.append('\n');
                 outToServer.writeBytes(message.toString());
 
@@ -57,7 +55,7 @@ public class Client {
             }
 
         } catch (IOException e) {
-            System.out.println("IOException.");
+            System.err.println("IOException.");
             System.exit(2);
         }
     }

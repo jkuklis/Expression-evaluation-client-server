@@ -34,8 +34,8 @@ public class Server {
                 try {
                     monitor.listen();
                 } catch (InterruptedException e) {
-                    System.out.println("Interrupted exception in listener");
-                    System.exit(1);
+                    System.err.println("Interrupted exception in listener");
+                    System.exit(2);
                 }
             }
         });
@@ -49,7 +49,7 @@ public class Server {
                     try {
                         monitor.work();
                     } catch (InterruptedException e) {
-                        System.out.println("Interrupted exception in worker.");
+                        System.err.println("Interrupted exception in worker.");
                         System.exit(2);
                     }
                 }
@@ -67,7 +67,7 @@ public class Server {
                 workers[i].join();
             }
         } catch (InterruptedException e) {
-            System.out.println("Failure joining threads.");
+            System.err.println("Failure joining threads.");
             System.exit(2);
         }
     }
@@ -92,9 +92,7 @@ public class Server {
                         if (to_take) {
                             wait();
                         }
-                        System.out.println("awaiting connection");
                         connectionSocket = socket.accept();
-                        System.out.println("accepted");
 
                         to_take = true;
                         notify();
@@ -110,17 +108,14 @@ public class Server {
             while (true) {
                 Socket worker_socket;
                 synchronized (this) {
-                    System.out.println("worker ready");
-                    while (to_take == false) {
-                        System.out.println("worker checking");
+                    while (!to_take) {
                         wait();
                     }
-                    System.out.println("worker working");
 
                     worker_socket = connectionSocket;
 
                     to_take = false;
-                    notify();
+                    notifyAll();
                 }
 
                 read_and_respond(worker_socket);
@@ -189,12 +184,8 @@ public class Server {
                     val = val.subtract(expr);
                 }
 
-                System.out.println(expr.toString());
-                System.out.println(val.toString());
-                System.out.println(state.toString());
-
                 String message;
-                if (state == State.ERROR || state == state.AFTER_OPERATOR) {
+                if (state == State.ERROR || state == State.AFTER_OPERATOR) {
                     message = "ERROR";
                 } else {
                     message = val.toString();
@@ -203,7 +194,7 @@ public class Server {
                 outToClient.writeBytes(message + "\n");
 
             } catch (IOException e) {
-                System.out.println("IOException in worker.");
+                System.err.println("IOException in worker.");
                 System.exit(2);
             }
         }
