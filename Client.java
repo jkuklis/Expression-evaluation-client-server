@@ -9,7 +9,7 @@ public class Client {
         String ip = "localhost";
 
         int TIMEOUT = 2;
-        int MAX_LENGTH = 100;
+        int MAX_LENGTH = 10;
 
         for (int i = 0; i < args.length; i += 2) {
             String par = args[i];

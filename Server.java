@@ -190,7 +190,7 @@ public class Server {
                         message = val.toString();
                     }
 
-//                    outToClient.writeBytes(message + "\n");
+                    outToClient.writeBytes(message + "\n");
 
                 } catch (IOException e) {
                     System.out.println("IOException in worker.");

@@ -1,4 +1,4 @@
-public class Main {
+public class Server_Main {
     public static void main(String args[]) {
         int port = 12345;
         int threads_count = 3;
