@@ -3,34 +3,34 @@ public class Server_Main {
         int port = 12345;
         int threads_count = 3;
 
-        String par = "";
-        String arg = "";
+        String parameter = "";
+        String argument = "";
 
         for (int i = 0; i < args.length; i += 2) {
-            par = args[i];
+            parameter = args[i];
             if (i+1 < args.length) {
-                arg = args[i+1];
+                argument = args[i+1];
             } else {
-                System.err.println("No argument to parameter: " + par);
+                System.err.println("No argument to parameter: " + parameter);
                 System.exit(2);
             }
 
-            switch(par) {
+            switch(parameter) {
                 case "-p":
                     try {
-                        port = Integer.parseInt(arg);
+                        port = Integer.parseInt(argument);
                         if (port < 1024 || port > 65535) {
                             System.err.println("Port not in range from 1024 to 65535");
                             System.exit(2);
                         }
                     } catch (NumberFormatException e) {
-                        System.err.println("Argument " + arg + " must be an integer.");
+                        System.err.println("Argument " + argument + " must be an integer.");
                         System.exit(2);
                     }
                     break;
                 case "-t":
                     try {
-                        threads_count = Integer.parseInt(arg);
+                        threads_count = Integer.parseInt(argument);
                         if (threads_count < 1) {
                             System.err.println("Threads count must be positive.");
                             System.exit(2);
@@ -40,12 +40,12 @@ public class Server_Main {
                             System.exit(2);
                         }
                     } catch (NumberFormatException e) {
-                        System.err.println("Argument " + arg + " must be an integer.");
+                        System.err.println("Argument " + argument + " must be an integer.");
                         System.exit(2);
                     }
                     break;
                 default:
-                    System.err.println("Unrecognized parameter: " + par + ", available: p - port, t - number of threads");
+                    System.err.println("Unrecognized parameter: " + parameter + ", available: p - port, t - number of threads");
                     System.exit(2);
             }
         }

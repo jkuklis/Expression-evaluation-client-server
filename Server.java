@@ -72,29 +72,29 @@ public class Server {
         }
     }
 
-    private enum State {
+    private enum ExpressionState {
         START, NUMBER, BEFORE_OPERATOR, AFTER_OPERATOR, ERROR
     }
 
     private class Monitor {
-        private Boolean to_take;
-        private State state;
+        private Boolean connection_to_take;
+        private ExpressionState state;
 
         public Monitor() {
-            this.to_take = false;
-            this.state = State.START;
+            this.connection_to_take = false;
+            this.state = ExpressionState.START;
         }
 
         public void listen() throws InterruptedException {
             while (true) {
                 try {
                     synchronized (this) {
-                        if (to_take) {
+                        if (connection_to_take) {
                             wait();
                         }
                         connectionSocket = socket.accept();
 
-                        to_take = true;
+                        connection_to_take = true;
                         notify();
                     }
                 } catch (IOException e) {
@@ -108,13 +108,13 @@ public class Server {
             while (true) {
                 Socket worker_socket;
                 synchronized (this) {
-                    while (!to_take) {
+                    while (!connection_to_take) {
                         wait();
                     }
 
                     worker_socket = connectionSocket;
 
-                    to_take = false;
+                    connection_to_take = false;
                     notifyAll();
                 }
 
@@ -127,68 +127,69 @@ public class Server {
                 BufferedReader inFromClient = new BufferedReader(new InputStreamReader(worker_socket.getInputStream()));
                 DataOutputStream outToClient = new DataOutputStream(worker_socket.getOutputStream());
 
-                BigInteger val = new BigInteger("0");
-                BigInteger expr = new BigInteger("0");
+                BigInteger accumulator = new BigInteger("0");
+                BigInteger built_expr = new BigInteger("0");
 
                 Boolean plus = true;
-                int read_char = inFromClient.read();
-                while (read_char != -1) {
-                    char c = (char)read_char;
-                    if (c == '\n') {
+                int read_value = inFromClient.read();
+
+                while (read_value != -1) {
+                    char read_char = (char)read_value;
+                    if (read_char == '\n') {
                         break;
                     }
 
-                    switch(c) {
+                    switch(read_char) {
                         case '+':
                         case '-':
-                            if (state == State.NUMBER || state == State.BEFORE_OPERATOR) {
-                                state = State.AFTER_OPERATOR;
+                            if (state == ExpressionState.NUMBER || state == ExpressionState.BEFORE_OPERATOR) {
+                                state = ExpressionState.AFTER_OPERATOR;
                                 if (plus) {
-                                    val = val.add(expr);
+                                    accumulator = accumulator.add(built_expr);
                                 } else {
-                                    val = val.subtract(expr);
+                                    accumulator = accumulator.subtract(built_expr);
                                 }
-                                expr = new BigInteger("0");
-                                plus = (c == '+');
+                                built_expr = new BigInteger("0");
+                                plus = (read_char == '+');
                             } else {
-                                state = State.ERROR;
+                                state = ExpressionState.ERROR;
                             }
                             break;
                         case ' ':
                         case '\t':
-                            if (state == State.NUMBER) {
-                                state = State.BEFORE_OPERATOR;
+                            if (state == ExpressionState.NUMBER) {
+                                state = ExpressionState.BEFORE_OPERATOR;
                             }
                             break;
                         default:
-                            if (Character.isDigit(c) && state != State.BEFORE_OPERATOR) {
-                                expr = expr.multiply(new BigInteger("10"));
-                                expr = expr.add(new BigInteger(Character.toString(c)));
-                                state = State.NUMBER;
+                            if (Character.isDigit(read_char) && state != ExpressionState.BEFORE_OPERATOR) {
+                                built_expr = built_expr.multiply(new BigInteger("10"));
+                                built_expr = built_expr.add(new BigInteger(Character.toString(read_char)));
+                                state = ExpressionState.NUMBER;
                             } else {
-                                state = State.ERROR;
+                                state = ExpressionState.ERROR;
                             }
 
                     }
 
-                    if (state == State.ERROR) {
+                    if (state == ExpressionState.ERROR) {
                         break;
                     }
 
-                    read_char = inFromClient.read();
+                    read_value = inFromClient.read();
                 }
 
                 if (plus) {
-                    val = val.add(expr);
+                    accumulator = accumulator.add(built_expr);
                 } else {
-                    val = val.subtract(expr);
+                    accumulator = accumulator.subtract(built_expr);
                 }
 
                 String message;
-                if (state == State.ERROR || state == State.AFTER_OPERATOR) {
+                if (state == ExpressionState.ERROR || state == ExpressionState.AFTER_OPERATOR) {
                     message = "ERROR";
                 } else {
-                    message = val.toString();
+                    message = accumulator.toString();
                 }
 
                 outToClient.writeBytes(message + "\n");

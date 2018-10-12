@@ -28,19 +28,19 @@ public class Client {
             StringBuilder message = new StringBuilder(MAX_LENGTH);
 
             try {
-                int read_char = inFromUser.read();
-                while (read_char != -1) {
-                    char c = (char) read_char;
-                    if (c == '\n') {
+                int read_value = inFromUser.read();
+                while (read_value != -1) {
+                    char read_char = (char) read_value;
+                    if (read_char == '\n') {
                         break;
                     }
-                    message.append(c);
+                    message.append(read_char);
                     if (message.length() == MAX_LENGTH) {
                         outToServer.writeBytes(message.toString());
                         message = new StringBuilder(MAX_LENGTH);
                     }
 
-                    read_char = inFromUser.read();
+                    read_value = inFromUser.read();
                 }
 
                 message.append('\n');

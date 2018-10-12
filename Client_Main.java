@@ -3,36 +3,36 @@ public class Client_Main {
         int port = 12345;
         String ip = "localhost";
 
-        String par = "";
-        String arg = "";
+        String parameter = "";
+        String argument = "";
 
         for (int i = 0; i < args.length; i += 2) {
-            par = args[i];
+            parameter = args[i];
             if (i + 1 < args.length) {
-                arg = args[i + 1];
+                argument = args[i + 1];
             } else {
-                System.err.println("No argument to parameter: " + par);
+                System.err.println("No argument to parameter: " + parameter);
                 System.exit(2);
             }
 
-            switch (par) {
+            switch (parameter) {
                 case "-a":
-                    ip = arg;
+                    ip = argument;
                     break;
                 case "-p":
                     try {
-                        port = Integer.parseInt(arg);
+                        port = Integer.parseInt(argument);
                         if (port < 1024 || port > 65535) {
                             System.err.println("Port not in range from 1024 to 65535");
                             System.exit(2);
                         }
                     } catch (NumberFormatException e) {
-                        System.err.println("Argument " + arg + " must be an integer.");
+                        System.err.println("Argument " + argument + " must be an integer.");
                         System.exit(2);
                     }
                     break;
                 default:
-                    System.err.println("Unrecognized parameter: " + par + ", available: a - server ip, p - port");
+                    System.err.println("Unrecognized parameter: " + parameter + ", available: a - server ip, p - port");
                     System.exit(2);
             }
         }
